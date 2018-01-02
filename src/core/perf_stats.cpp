@@ -13,7 +13,6 @@
 using namespace std::chrono_literals;
 using DoubleSecs = std::chrono::duration<double, std::chrono::seconds::period>;
 using std::chrono::duration_cast;
-using std::chrono::microseconds;
 
 namespace Core {
 
@@ -74,11 +73,11 @@ double PerfStats::GetLastFrameTimeScale() {
     return duration_cast<DoubleSecs>(previous_frame_length).count() / FRAME_LENGTH;
 }
 
+microseconds Core::FrameLimiter::MAX_LAG_TIME_US = 25ms;
 void FrameLimiter::DoFrameLimiting(u64 current_system_time_us) {
     // Max lag caused by slow frames. Can be adjusted to compensate for too many slow frames. Higher
     // values increase the time needed to recover and limit framerate again after spikes.
-    constexpr microseconds MAX_LAG_TIME_US = 25ms;
-
+    microseconds temp = MAX_LAG_TIME_US;
     if (!Settings::values.toggle_framelimit) {
         return;
     }
@@ -88,7 +87,7 @@ void FrameLimiter::DoFrameLimiting(u64 current_system_time_us) {
     frame_limiting_delta_err += microseconds(current_system_time_us - previous_system_time_us);
     frame_limiting_delta_err -= duration_cast<microseconds>(now - previous_walltime);
     frame_limiting_delta_err =
-        MathUtil::Clamp(frame_limiting_delta_err, -MAX_LAG_TIME_US, MAX_LAG_TIME_US);
+        MathUtil::Clamp(frame_limiting_delta_err, -temp, temp);
 
     if (frame_limiting_delta_err > microseconds::zero()) {
         std::this_thread::sleep_for(frame_limiting_delta_err);
@@ -100,6 +99,16 @@ void FrameLimiter::DoFrameLimiting(u64 current_system_time_us) {
 
     previous_system_time_us = current_system_time_us;
     previous_walltime = now;
+}
+
+void FrameLimiter::ChangeFrameLimit(bool increase)
+{
+    if (!increase && MAX_LAG_TIME_US <= 25ms)
+        MAX_LAG_TIME_US += 2ms;
+    else if (MAX_LAG_TIME_US >= 2ms)
+        MAX_LAG_TIME_US -= 2ms;
+    else if (MAX_LAG_TIME_US < 2ms)
+        MAX_LAG_TIME_US = 0ms;
 }
 
 } // namespace Core

@@ -7,6 +7,7 @@
 #include <chrono>
 #include <mutex>
 #include "common/common_types.h"
+using std::chrono::microseconds;
 
 namespace Core {
 
@@ -70,6 +71,8 @@ public:
 
     void DoFrameLimiting(u64 current_system_time_us);
 
+    static void ChangeFrameLimit(bool increase);
+
 private:
     /// Emulated system time (in microseconds) at the last limiter invocation
     u64 previous_system_time_us = 0;
@@ -78,6 +81,7 @@ private:
 
     /// Accumulated difference between walltime and emulated time
     std::chrono::microseconds frame_limiting_delta_err{0};
+    static microseconds MAX_LAG_TIME_US;
 };
 
 } // namespace Core
