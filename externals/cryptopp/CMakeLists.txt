@@ -193,3 +193,11 @@ target_include_directories(cryptopp INTERFACE .)
 
 find_package(Threads)
 target_link_libraries(cryptopp PRIVATE ${CMAKE_THREAD_LIBS_INIT})
+
+if(CMAKE_COMPILER_IS_GNUCXX)
+    string(REPLACE " -fno-rtti" " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+elseif(CMAKE_COMPILER_IS_CLANG)
+    string(REPLACE " -fno-rtti" " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+elseif(MSVC)
+    add_definitions(/GR)
+endif()
