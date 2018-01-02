@@ -282,7 +282,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Frame Limit</string>
+    <string>Toggle Limit Framerate</string>
    </property>
   </action>
   <action name="action_Select_Game_List_Root">
